@@ -1,0 +1,9 @@
+%% Unified training system: static data and reward-weighted RL generations in one weighted-likelihood trainer — [From paper: Figs. 1-2, redrawn]
+flowchart LR
+    W["Published weights"] -->|"load between batches"| G["Generators<br/>N = 16 samples per prompt + verifier"]
+    G -->|"RL records: prompt w = 0, response w = r / p_hat"| BUF["Data buffer"]
+    PRE["Pretraining text<br/>w = 1"] --> BUF
+    MID["Midtraining corpus<br/>w = 1"] --> BUF
+    SFT["SFT demonstrations<br/>prompt w = 0, response w = 1"] --> BUF
+    BUF -->|"mixture schedule lambda_s,t (token fractions)"| T["Trainer<br/>single weighted cross-entropy / T_B"]
+    T -->|"publish every k updates"| W

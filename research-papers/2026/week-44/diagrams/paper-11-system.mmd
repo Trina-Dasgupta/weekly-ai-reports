@@ -1,0 +1,23 @@
+%% Rollback: experience-backtracking search with world model-policy co-evolution — [From paper: Fig. 2 and Fig. 4, redrawn]
+flowchart TD
+    REAL["Real robot executes latest policy"] --> DREAL["Real trajectories D_real (binary outcome)"]
+    DEMO["Offline demonstrations"] --> SEED["Seed trajectory"]
+    DREAL --> SEED
+    SEED --> SPINE["Reference spine + cached world-model contexts"]
+    SPINE --> SEL["MCTS select: PUCT + progressive widening"]
+    SEL --> RESTORE["Restore cached context (no prefix regeneration)"]
+    RESTORE --> PROP["Policy proposes action chunk (highest bin)"]
+    PROP --> WM["GE-Sim 2.0 world model: multi-view frames + proprio"]
+    WM --> JUDGE["World judge: success 0/1"]
+    JUDGE --> BACKUP["Back up visits and returns"]
+    BACKUP --> SEL
+    BACKUP --> VAL["Subtree success rate q_hat, normalised by best sibling, K=5 bins"]
+    VAL --> DTREE["Tree supervision D_tree"]
+    DTREE --> MIX["D_mix = D_tree + demos + D_real"]
+    DEMO --> MIX
+    DREAL --> MIX
+    MIX --> PTRAIN["Advantage-conditioned flow-matching policy update (pi0.5)"]
+    PTRAIN --> REAL
+    PTRAIN --> PROP
+    DREAL --> WMT["Test-time physics grounding: LoRA SFT + DMD"]
+    WMT --> WM

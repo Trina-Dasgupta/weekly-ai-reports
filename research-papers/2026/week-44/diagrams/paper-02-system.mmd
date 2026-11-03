@@ -1,0 +1,21 @@
+%% Soft-MTP training graph with KL gradient-recovery trick — [Conceptual reconstruction]
+flowchart TD
+    X["Tokens B x T"] --> E["Embeddings B x T x d"]
+    E --> T["Shared trunk -> h0"]
+    T --> H1["MTP head 1 -> h1"]
+    H1 --> H2["MTP head 2 -> h2"]
+    H2 --> H3["MTP head 3 -> h3"]
+    T --> AUG["h0_aug = h0 + s_k * (stopgrad(hk) - hk), zero in forward"]
+    H1 --> AUG
+    H2 --> AUG
+    H3 --> AUG
+    AUG --> NTP["NTP fused cross-entropy via shared W"]
+    H1 --> MTP["MTP fused cross-entropy via shared W"]
+    H2 --> MTP
+    H3 --> MTP
+    NTP --> RES["Backward: hk gets minus g_res"]
+    MTP --> HARD["Backward: hk gets g_hard"]
+    RES --> KL["Net gradient at hk = g_KL (distil toward own NTP at t+k)"]
+    HARD --> KL
+    KL --> TRUNKG["KL gradient into heads and trunk; output head W keeps CE"]
+    TRUNKG --> INF["Inference: heads draft 3 tokens, NTP verifies (speculative sampling)"]

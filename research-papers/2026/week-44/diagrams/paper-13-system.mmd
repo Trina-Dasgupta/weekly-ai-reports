@@ -1,0 +1,19 @@
+%% Memory Tax: net value of agent memory vs naive RAG, with the three tax sources — [Conceptual reconstruction]
+flowchart TD
+    H["Raw interaction history H"] --> CH["Naive RAG: turn chunks, BM25 + dense, rerank"]
+    H --> I["Memory ingestion I(H): LLM extract / summarise / link"]
+    I --> M["Memory store M"]
+    Q["Query q"] --> CH
+    Q --> R["Memory retrieval R(q, M)"]
+    M --> R
+    CH --> G1["QA backbone G(q, C_rag)"]
+    R --> G2["QA backbone G(q, C_mem)"]
+    G1 --> J["LLM judge per query"]
+    G2 --> J
+    J --> BEN["Benefit: memory right, RAG wrong"]
+    J --> TAX["Tax: RAG right, memory wrong"]
+    BEN --> NV["Net value = Benefit - Tax"]
+    TAX --> NV
+    I -. "Faithfulness loss (Fig. 3, Table 2)" .-> TAX
+    R -. "Accessibility loss (Fig. 4, Fig. 5)" .-> TAX
+    G2 -. "Robustness loss (Fig. 6)" .-> TAX

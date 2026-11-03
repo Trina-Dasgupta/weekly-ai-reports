@@ -1,0 +1,17 @@
+%% NLD-Uni: Elastic-MoT unified diffusion LLM with cross-paradigm on-policy distillation — [From paper: Figs. 1, 3, 5, 6, redrawn and combined]
+flowchart TD
+    IMG["Input image"] --> SEM["Semantic encoder (RADIO-H)"]
+    IMG --> VQE["VQ encoder (IBQ, 131k codes)"]
+    TXT["Text prompt"] --> TOK["Text tokens"]
+    SEM --> SEQ["Block sequence<br/>clean prompt blocks + corrupted output block"]
+    VQE --> SEQ
+    TOK --> SEQ
+    SEQ --> UT["Understanding tower (8B)"]
+    SEQ --> GT["Generation tower (8B)"]
+    UT <-->|"joint attention"| GT
+    UT --> OT["Text output<br/>(masked diffusion, AR view at block size 1)"]
+    GT --> OI["Image tokens<br/>self-refining ball-tree diffusion"]
+    OI --> VQD["VQ decoder -> image"]
+    ART["AR VLM teacher<br/>(Nemotron-3 Nano Omni)"] -.->|"AR OPD loss on student AR view"| UT
+    OT -.->|"consistency KL: AR view -> diffusion view"| UT
+    FLT["Rectified-flow teacher<br/>(Qwen-Image)"] -.->|"teacher-refined student output as SFT target"| GT

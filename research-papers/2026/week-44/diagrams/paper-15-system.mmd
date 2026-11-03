@@ -1,0 +1,17 @@
+%% ThinkWorld: Chain-of-Dynamics reasoning reinforced by world imagination — [From paper: Fig. 2, redrawn]
+flowchart TD
+    IN["Instruction + history frames + current views + state"] --> VLM["Qwen3-VL-2B VLM"]
+    VLM --> COD["Chain-of-Dynamics: FAST motion tokens (vocab 2,048)"]
+    COD --> FQ["64 future-query tokens"]
+    FQ --> PJ["Future projector: MLP + 6-layer cross-attn"]
+    PJ --> Z["Imagined DINO features at t+1s (196 x 1280)"]
+    FUT["Observed frame t+1s (robot or human video)"] --> DINO["Frozen DINOv3 ViT-H/16+"]
+    DINO --> ZS["Target features z*"]
+    Z --> L1["SFT: L_CoD + lambda L_future"]
+    ZS --> L1
+    Z --> RW["RL reward r_world = motion-weighted cosine(z, z*)"]
+    ZS --> RW
+    RW --> GRPO["GRPO, K=4 CoDs, VLM only"]
+    GRPO -.-> VLM
+    VLM -- "layer-wise K/V of inputs" --> AE["Action expert: flow matching, 36 blocks, width 768"]
+    AE --> ACT["Robot action chunk (max 30 x 32)"]

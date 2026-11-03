@@ -1,0 +1,20 @@
+%% FORK precision-aware rubric reward inside GRPO — [From paper: Fig. 2, redrawn]
+flowchart TD
+    X["Prompt x"] --> POL["Policy pi_theta"]
+    POL --> Y["Response y (16 samples per prompt)"]
+    Y --> UZ["LLM unitizer: sentence units u_1..u_n"]
+    RB["Rubrics r_j with weights w_j"] --> MT["LLM grader: match rubrics to units"]
+    UZ --> MT
+    MT --> CR["Necessity credit: each rubric splits 1 credit over matched units"]
+    CR --> TH["LLM grader chooses threshold tau"]
+    TH --> NL["Necessary if credit >= tau"]
+    UZ --> FC["LLM grader: factual correctness per unit"]
+    NL --> PR["Precision = share of units necessary AND correct"]
+    FC --> PR
+    Y --> RS["LLM grader: rubric satisfied?"]
+    RB --> RS
+    RS --> RC["Recall = weighted rubric coverage"]
+    PR --> FB["FORK reward = F_beta(Precision, Recall)"]
+    RC --> FB
+    FB --> GRPO["GRPO: group-normalised advantage, policy update"]
+    GRPO --> POL

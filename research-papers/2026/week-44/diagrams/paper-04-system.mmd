@@ -1,0 +1,12 @@
+%% PDRVLA system: physical tokens from mid-layer VLM features condition a flow-matching action expert; frozen world model used only in pretraining — [From paper: Fig. 3 and Fig. 4, redrawn]
+flowchart TD
+    IN["Multi-view images + prefixed instruction + proprio state"] --> VLM["Qwen3.5-4B VLM (32 blocks)"]
+    VLM -->|"block-8 features (detached in stage 2)"| PDM["Physical Dynamics Module: 50 queries, 4 blocks, 57.3M params"]
+    VLM -->|"final-layer features"| CAT["X_t = concat(H_last, C_t)"]
+    PDM -->|"C_t: 50 x 2560 physical tokens"| CAT
+    CAT --> DIT["DiT action expert ~150M, flow matching"]
+    NOISE["Gaussian noise 8 x 58"] --> DIT
+    DIT -->|"4 Euler steps"| ACT["Action chunk: K = 8 steps, 58-dim"]
+    PDM -.->|"training: direct head"| DIR["Predict future RGB / depth / flow VAE latents (L_direct)"]
+    PDM -.->|"stage 1 only: conditioning"| WM["Frozen LingBot-Video-Dense-1.3B (L_WM)"]
+    WM -.-> HEADS["Trainable depth / flow heads"]

@@ -1,0 +1,20 @@
+%% LOWN certificate-guided visual routing decode loop — [From paper: Fig. 3 and Algorithm 1, redrawn]
+flowchart TD
+    IMG["Image"] --> ENC["Vision encoder (once)"]
+    ENC --> V["Visual embeddings v"]
+    C["Prompt c"] --> TS["Text sequence c + x_t (original position IDs)"]
+    X["Response state x_t"] --> TS
+    TS --> TO["TEXT-ONLY forward: y_text"]
+    TS --> FULL["FULL forward p(. given v,c,x_t)"]
+    V --> FULL
+    FULL --> ANC["Anchor: y_bar, s_bar"]
+    TO --> CERT["Certificate: longest s_bar-ordered prefix with y_text = y_bar (+ repetition guard)"]
+    ANC --> CERT
+    CERT --> GATE{"Certified prefix >= k ?"}
+    GATE -- "yes: skip image" --> ACC["Commit whole certified prefix with anchor tokens"]
+    GATE -- "no: look at image" --> FULL
+    FULL --> DF["Commit k tokens, disagreement-first"]
+    ACC --> X
+    DF --> X
+    X --> DONE{"Masks left?"}
+    DONE -- "no" --> OUT["Final response"]

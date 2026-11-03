@@ -1,0 +1,17 @@
+%% TAO evaluate-then-decide scheduler in CGDC serving — [From paper: Fig. 2, redrawn]
+flowchart TD
+    CL["Agent clients<br/>(mini-SWE-agent, Claude Code)"] --> POOL["Waiting pool P<br/>(interrupted sessions + new arrivals)"]
+    TOOLS["Distributed CPUs: external tools"] -->|"tool durations, deadlines, completion"| SNAP["Frozen snapshot"]
+    ENG["Clustered GPU nodes b in B<br/>(engine-managed KV cache)"] -->|"cached tokens, residual capacity C_b"| SNAP
+    POOL --> SNAP
+    SNAP --> K["KV-cache credit k_ib<br/>half-life 10 s"]
+    SNAP --> R["Tool-return readiness r_i<br/>binary, horizon 1 s"]
+    SNAP --> T["Token count t_i"]
+    K --> V["Value triplet v_ib = (k_ib, r_i, t_i)<br/>lexicographic"]
+    R --> V
+    T --> V
+    V --> DP["Joint select + place<br/>exact DP over quantised capacities<br/>(async worker, BFD fallback)"]
+    DP --> RV["Revalidate vs live state<br/>apply longest feasible prefix"]
+    RV -->|"admit session i to node b"| ENG
+    ENG -->|"tool call: interrupt session"| TOOLS
+    ENG -->|"interrupted session"| POOL

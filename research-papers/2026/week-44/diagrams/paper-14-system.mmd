@@ -1,0 +1,19 @@
+%% EasyProver + Aegis: recursive async Lean proving over Rust-derived verification tasks — [From paper: Figs. 1-4, redrawn and combined]
+flowchart TD
+    LC["LeetCode problem"] --> RU["Coding agent: safe Rust"]
+    RU --> AE["Charon + Aeneas: Rust to Lean"]
+    AE --> DV{"Differential validation Rust == Lean"}
+    DV -- pass --> SP["Spec agent: theorem P with sorry"]
+    SP --> ROOT["EasyProver root agent (off-the-shelf model, no training)"]
+    ROOT --> PROBE["Parallel tactic probing: return winner only"]
+    ROOT --> SPAWN["Agent tool: spawn children with fresh context + workspace copy"]
+    SPAWN --> CH1["Child: lemma"]
+    SPAWN --> CH2["Child: alternative strategy / refutation"]
+    CH1 -- "async return" --> ROOT
+    CH2 -- "async return" --> ROOT
+    PROBE --> INF["InfiniLean: autoscaled Mathlib-warm Lean workers"]
+    ROOT --> INF
+    SEM["Semaphores: 64 agents, 16 heavy Lean queries"] -.-> ROOT
+    ROOT --> CMP{"Lean Comparator accepts?"}
+    CMP -- yes --> OUT["Kernel-checked proof of P or not-P; stop search"]
+    CMP -- no --> ROOT

@@ -1,0 +1,14 @@
+%% h1 harness: ReAct agent on a persistent Lean file with validation and reflection — [From paper: Fig. 2]
+flowchart TD
+    ST["Original Lean 4 statement (Mathlib imported)"] --> AG["Frontier LLM agent: ReAct loop, at most T turns per iteration"]
+    AG -->|"search: LeanExplore, Loogle, grep"| TL["Lean interface tools"]
+    AG -->|"probe: REPL scratch code, LSP goals and diagnostics"| TL
+    AG -->|"edit / undo"| WF["Persistent working file"]
+    TL -->|"truncated results"| AG
+    WF -->|"compile errors and open goals"| AG
+    AG -->|"submit, or forced at T turns"| SV["External validator: SafeVerify vs original statement"]
+    SV -->|"accepted"| PF["Verified proof"]
+    SV -->|"rejected"| RF["Reflection LLM compacts transcript and feedback"]
+    RF -->|"verified progress, lessons, useful lemma names"| BG{"Spend below budget B?"}
+    BG -->|"yes: new iteration from current file"| AG
+    BG -->|"no"| UN["Unsolved within budget"]

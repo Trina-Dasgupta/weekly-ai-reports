@@ -1,0 +1,18 @@
+%% Good-view JEPAs trained per modality, aligned by one rotation — [Conceptual reconstruction]
+flowchart TD
+    Z["World state z (one scene)"] --> IMG["Image rendering"]
+    Z --> CAPS["Several captions of the same scene"]
+    IMG --> CROPS["2 global + 6 local crops"]
+    CROPS --> VIT["Image JEPA: ViT-S/16 (or frozen DINOv2)"]
+    VIT --> LI["LeJEPA prediction loss + SIGReg"]
+    CAPS --> GV["Good views: 8 trimmed and masked views from different captions"]
+    GV --> BERT["Text JEPA: BERT-style encoder trained alone"]
+    BERT --> LT["LeJEPA prediction loss + SIGReg (lambda = 0.02)"]
+    VIT --> EI["Image embeddings = Q_img h*(z)"]
+    BERT --> ET["Text embeddings = Q_txt h*(z)"]
+    EI --> PROC["Orthogonal Procrustes on k or more pairs (or Sinkhorn OT with zero pairs)"]
+    ET --> PROC
+    PROC --> SHARED["Shared space up to one rotation"]
+    SHARED --> RET["Cross-modal retrieval (mutual 10-NN, R@1)"]
+    SHARED --> CAP["Text-only decoder captions rotated image embeddings"]
+    SHARED --> ZS["Pair-free zero-shot classification"]

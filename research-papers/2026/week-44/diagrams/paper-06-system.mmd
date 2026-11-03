@@ -1,0 +1,14 @@
+%% EmbeddingGemma 2 unified multimodal embedding pipeline — [Conceptual reconstruction]
+flowchart TD
+    TXT["Task prefix + text"] --> LOOK["Embedding lookup (512-d)"]
+    IMG["Image / video frames (1 fps, max 32)"] --> VIT["ViT patch 16, 167M, trainable; N_vis tokens: 70 / 140 / 280 / 560 / 1120"]
+    AUD["Audio 40 ms Mel frames"] --> CONF["Conformer audio encoder 305M, frozen; 25 tokens per second"]
+    VIT -->|"768 to 512, SOI / EOI"| SEQ["Interleaved sequence: BOS + segments + EOS"]
+    CONF -->|"1536 to 512, SOA / EOA"| SEQ
+    LOOK --> SEQ
+    SEQ --> BB["Bidirectional Gemma 4 backbone: 24 layers, d = 512, table-free PLE (271M)"]
+    BB --> POOL["Mean pooling"]
+    POOL --> PROJ["Linear projection to 768"]
+    PROJ --> NORM["L2 normalize"]
+    NORM --> MRL["Matryoshka embedding: 768 / 512 / 256 / 128"]
+    MRL --> RET["Cosine similarity search in one shared space"]
